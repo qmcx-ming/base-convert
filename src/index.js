@@ -51,9 +51,15 @@ function convertBase(value, fromBase, toBase) {
   const decimalValue = parseInt(value, fromBase);
   // 将十进制整数转换为目标进制的字符串
   let result = decimalValue.toString(toBase).toUpperCase(); // 将结果转换为大写（适用于16进制表示）
-  // 如果目标进制是二进制，并且结果长度不足8位，补充0
-  if (toBase === 2 && result.length === 5) {
-    result = result.padStart(8, '0');
+  // 如果目标进制是二进制，检查长度并按需补零
+  if (toBase === 2) {
+    const length = result.length;
+    const remainder = length % 4;
+
+    // 如果二进制结果的长度不是4的倍数，补充0
+    if (remainder !== 0) {
+      result = result.padStart(length + (4 - remainder), '0');
+    }
   }
   return result;
 }
