@@ -7,6 +7,10 @@
     "name": "青明尘下",
     "email": "qmcx.ming@qq.com"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qmcx-ming/base-convert.git"
+  },
   "keywords": [
     "进制转换",
     "base-convert",
