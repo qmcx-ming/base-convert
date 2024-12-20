@@ -8,26 +8,71 @@ function init() {
       const word = document.getText(document.getWordRangeAtPosition(position));
       // 属于进制数再显示
       if (reg.test(word)) {
-        const fromBase = detectBase(word);// 检测进制
-        // 去除进制前缀
-        const number = word.replace(/^(0[bBxXoO])?/, '');
-        const hex = convertBase(number, fromBase, 16);
-        const dec = convertBase(number, fromBase, 10);
-        const oct = convertBase(number, fromBase, 8);
-        const bin = convertBase(number, fromBase, 2);
+        const { hex, dec, oct, bin, binSpace } = getBaseNumber(word);
         const hoverContent = new vscode.MarkdownString(
           `**进制转换**\n` +
           `- HEX(十六进制): ${hex} [复制](command:baseConvert.copyTextCommand?${encodeURIComponent(JSON.stringify(hex))})\n` +
           `- DEC(十进制): ${dec} [复制](command:baseConvert.copyTextCommand?${encodeURIComponent(JSON.stringify(dec))})\n` +
           `- OCT(八进制): ${oct} [复制](command:baseConvert.copyTextCommand?${encodeURIComponent(JSON.stringify(oct))})\n` +
           // 对于二进制每4位中间加一个空格 如： 1010 1011
-          `- BIN(二进制): ${bin.replace(/(.{4})/g, '$1 ')} [复制](command:baseConvert.copyTextCommand?${encodeURIComponent(JSON.stringify(bin))})`
+          `- BIN(二进制): ${binSpace} [复制](command:baseConvert.copyTextCommand?${encodeURIComponent(JSON.stringify(bin))})`
         );
         hoverContent.isTrusted = true;// 允许链接命令执行
         return new vscode.Hover(hoverContent);
       }
     }
   })
+}
+
+function showQuickPick(value) {
+  const { hex, dec, oct, bin, binSpace } = getBaseNumber(value);
+  vscode.window.showQuickPick([
+    { label: hex, description: 'HEX(十六进制)', detail: 'Binary', value: hex },
+    { label: dec, description: 'DEC(十进制)', detail: 'Octal', value: dec },
+    { label: oct, description: 'OCT(八进制)', detail: 'Decimal', value: oct },
+    { label: binSpace, description: 'BIN(二进制)', detail: 'Hexadecimal', value: bin },
+    { label: '返回', detail: 'Return', value: 'return' }
+  ], {
+    ignoreFocusOut: true
+  }).then((selection) => {
+    if (selection) {
+      const { value } = selection;
+      value === 'return' ? showInput() : vscode.commands.executeCommand('baseConvert.copyTextCommand', value);
+    }
+  })
+}
+
+function showInput() {
+  vscode.window.showInputBox({
+    prompt: '请输入要转换的数字',
+    placeHolder: '例如: 0b1010、10...',
+    // 编辑器失去焦点，输入框不会自动关闭
+    ignoreFocusOut: true,
+    validateInput: (value) => {
+      if (!value) {
+        return '请输入要转换的数字';
+      }
+      if (!reg.test(value)) {
+        return '请输入正确的数字格式【十六进制(0x开头数字(0-9,a-f,A-F)、八进制(0o开头数字(0-7))、十进制(数字)、二进制(0b开头数字(0-1))】';
+      }
+    }
+  }).then((value) => {
+    if (value) {
+      showQuickPick(value);
+    }
+  })
+}
+
+// 获取每个进制数
+function getBaseNumber(value) {
+  const fromBase = detectBase(value);// 检测进制
+  // 去除进制前缀
+  const number = value.replace(/^(0[bBxXoO])?/, '');
+  const hex = convertBase(number, fromBase, 16);
+  const dec = convertBase(number, fromBase, 10);
+  const oct = convertBase(number, fromBase, 8);
+  const bin = convertBase(number, fromBase, 2);
+  return { hex, dec, oct, bin, binSpace: bin.replace(/(.{4})/g, '$1 ') };
 }
 
 // 判断是否为进制数
@@ -65,5 +110,6 @@ function convertBase(value, fromBase, toBase) {
 }
 
 module.exports = {
-  init
+  init,
+  showInput
 }

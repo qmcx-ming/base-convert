@@ -1,5 +1,5 @@
 const vscode = require('vscode');
-const { init } = require('./src');
+const { init, showInput } = require('./src');
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -7,8 +7,8 @@ const { init } = require('./src');
 function activate(context) {
 	console.log('进制转换插件启动~');
 	context.subscriptions.push(init());
-	const disposable = vscode.commands.registerCommand('baseConvert.helloWorld', function () {
-		vscode.window.showInformationMessage('Hello World from base-convert!');
+	const disposable = vscode.commands.registerCommand('baseConvert.convert', function () {
+		showInput();
 	});
 
 	context.subscriptions.push(disposable);
